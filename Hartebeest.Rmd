@@ -1,0 +1,170 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r setup}
+library(mrds)
+library(Distance)
+library(plyr)
+library(knitr)
+```
+
+```{r}
+raw <- read.table("HARTEBEEST11.csv",sep=",", header=TRUE)
+names(raw) <- c("Region.Label", "Sample.Label", "Effort", "Angle", "Dist", "X", "distance", "size")
+raw$object <- seq.int(nrow(raw))
+raw$Effort[raw$Region.Label == "c" & raw$Sample.Label == 2] <- 15.9
+raw$Effort[raw$Region.Label == "c" & raw$Sample.Label == 3] <- 15.9
+print(raw)
+```
+
+
+```{r}
+regions <- data.frame(unique(raw[, 1:1]))
+names(regions) <- c("Region.Label")
+regions$Area <- 0
+samples <- unique(raw[,1:3])
+names(samples) <- c("Region.Label", "Sample.Label", "Effort")
+data <- subset(na.omit(raw), select = c("object", "size", "distance"))
+observations <- subset(na.omit(raw), select = c("object", "Sample.Label", "Region.Label"))
+```
+
+```{r}
+plot(data.frame(data$distance, data$size))
+```
+
+```{r}
+halfnorm <- ds(data, key="hn", adjustment="cos", truncation = 680,
+             region.table = regions, sample.table = samples, obs.table = observations)
+```
+
+```{r}
+plot(halfnorm)
+ds.gof(halfnorm, breaks=c(50,100,150,200,300,400,500,680))
+```
+
+```{r}
+hr.cos.t600.cp <- ds(data, key="hr", adjustment="cos", truncation = 700,
+                  cutpoints = c(0,100,200,300,400,500,600,700),
+             region.table = regions, sample.table = samples, obs.table = observations)
+```
+
+
+
+```{r}
+hr.poly.t600.cp <- ds(data, key="hr", adjustment="poly", truncation = 700,
+                  cutpoints = c(0,100,200,300,400,500,600,700),
+             region.table = regions, sample.table = samples, obs.table = observations)
+```
+
+```{r}
+hr.herm.t600.cp3 <- ds(data, key="hr", adjustment="herm", truncation = 600,
+                  cutpoints = c(0,100,200,300,400,500,600),
+             region.table = regions, sample.table = samples, obs.table = observations)
+```
+
+
+
+
+```{r}
+plot(hr.herm.t600.cp , main="HR, Herm, T 600. with cutpoints")
+```
+```{r}
+plot(hr.herm.t600.cp2 , main="HR, Herm, T 600. with cutpoints")
+```
+
+```{r}
+plot(hr.herm.t600.cp3 , main="HR, Herm, T 600. with cutpoints")
+```
+
+```{r}
+ds.gof(hr.herm.t600.cp)
+ds.gof(hr.herm.t600.cp2)
+ds.gof(hr.herm.t600.cp3)
+```
+
+
+
+```{r}
+hr.herm.t600.cp4 <- ds(data, key="hr", adjustment="herm", truncation = 600,
+                  cutpoints = c(0,100,200,300,400,600),
+             region.table = regions, sample.table = samples, obs.table = observations)
+```
+```{r}
+plot(hr.herm.t600.cp4 , main="HR, Herm, T 600. with cutpoints")
+```
+```{r}
+ds.gof(hr.herm.t600.cp4)
+```
+
+
+```{r}
+hr.herm.t600.cp5 <- ds(data, key="hr", adjustment="herm", truncation = 650,
+                  cutpoints = c(0,75,150,225,350,475,650),
+             region.table = regions, sample.table = samples, obs.table = observations)
+```
+
+
+```{r}
+plot(hr.herm.t600.cp5 , main="HR, Herm, T 600. with cutpoints")
+```
+```{r}
+ds.gof(hr.poly.t600.cp)
+```
+
+
+
+```{r}
+summary(hr.cos.t600.cp)
+```
+
+
+```{r}
+hazard.std <- ds(data, key="hr", adjustment="herm", truncation = 700,
+                  cutpoints = c(0,100,200,300,400,500,600,700),
+             region.table = regions, sample.table = samples, obs.table = observations)
+```
+
+
+```{r}
+covariante <- ds(data, key="hr", adjustment="herm", truncation = 700,
+                  cutpoints = c(0,100,200,300,400,500,600,700), formula = ~size, scale="scale",
+             region.table = regions, sample.table = samples, obs.table = observations)
+```
+
+```{r}
+plot(covariante , main="Cluster size as covariente")
+```
+
+```{r}
+summary(covariante)
+```
+
+```{r}
+mcds <- ds(data, key="hr", adjustment="herm", truncation = 700, formula = ~size,
+             region.table = regions, sample.table = samples, obs.table = observations)
+```
+```{r}
+summary(mcds)
+```
+
+```{r}
+ds.gof(covariante.nobin)
+```
+```{r}
+cds.nobin <- ds(data, key="hr", adjustment="herm", truncation = 700,
+             region.table = regions, sample.table = samples, obs.table = observations)
+```
+
+```{r}
+plot(cds.nobin)
+
+fit.test <- ddf.gof(cds.nobin$ddf)
+```
+
+
+
+
+```{r}
+ds.gof(cds.nobin)
+```
